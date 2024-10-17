@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveillance des Systèmes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Surveillance des Systèmes</h1>
+    <canvas id="cpuChart" width="400" height="200"></canvas>
+    <canvas id="ramChart" width="400" height="200"></canvas>
+    <canvas id="diskChart" width="400" height="200"></canvas>
+
+    <script>
+        const cpuData = [];
+        const ramData = [];
+        const diskData = [];
+        const labels = [];
+
+        const ctxCpu = document.getElementById('cpuChart').getContext('2d');
+        const ctxRam = document.getElementById('ramChart').getContext('2d');
+        const ctxDisk = document.getElementById('diskChart').getContext('2d');
+
+        const cpuChart = new Chart(ctxCpu, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'CPU Usage (%)',
+                    data: cpuData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Usage (%)'
+                        },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        const ramChart = new Chart(ctxRam, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'RAM Usage (%)',
+                    data: ramData,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Usage (%)'
+                        },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        const diskChart = new Chart(ctxDisk, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Disk Usage (%)',
+                    data: diskData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Usage (%)'
+                        },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        function fetchLogs() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    const currentTime = new Date().toLocaleTimeString();
+
+                    // Ajouter les nouvelles données
+                    labels.push(currentTime);
+                    cpuData.push(data.cpu_usage);
+                    ramData.push(data.ram_usage);
+                    diskData.push(data.disk_usage);
+
+                    // Limiter le nombre de points affichés
+                    if (labels.length > 20) {
+                        labels.shift();
+                        cpuData.shift();
+                        ramData.shift();
+                        diskData.shift();
+                    }
+
+                    // Mettre à jour les graphiques
+                    cpuChart.update();
+                    ramChart.update();
+                    diskChart.update();
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Appeler fetchLogs toutes les 5 secondes
+        setInterval(fetchLogs, 5000);
+        window.onload = fetchLogs; // Appeler fetchLogs au chargement de la page
+    </script>
+</body>
+</html>
+
